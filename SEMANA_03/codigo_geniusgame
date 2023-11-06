@@ -1,0 +1,88 @@
+#include <Arduino.h>
+
+int sequence[32] = {};
+int buttons[4] = {2, 3, 4, 5};
+int leds[4] = {9, 10, 11, 12};
+int tons[4] = {262, 294, 330, 349};
+int rodada = 0;
+int pass = 0;
+int pressedbutton = 0;
+bool game_over = false;
+
+void setup()
+{
+  //buttons
+  pinMode(9, INPUT);
+  pinMode(11, INPUT);
+  pinMode(12, INPUT);
+  pinMode(13, INPUT);
+  //leds
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  // buzzer
+  pinMode(11, OUTPUT);
+}
+void loop(){
+  nextSequence();
+  playSequence();
+  waitPlayer();
+  if (game_over == true){
+    sequence[32] = {};
+    rodada = 0;
+    pass = 0;
+    game_over = false;
+  }
+  delay(1000);
+}
+
+// generating sequence 
+void nextSequence(){
+  randomSeed(analogRead(A0));
+  int sorteio = random(4);
+  sequence[rodada] = sorteio;
+  rodada = rodada + 1;
+}
+
+void playSequence(){
+  for (int i; i < rodada; i++){
+    digitalWrite(leds[i], HIGH); //turon on the led when the loop interact with n of round
+    tone(tons[i], HIGH);
+    delay(1000);
+    digitalWrite(leds[i], LOW);
+    tone(tons[i], LOW);
+  }
+}
+
+void waitPlayer(){
+  for( int i = 0; i <rodada; i++){
+    bool gameStart = true;
+    while (gameStart)
+    {
+      for(int i ; i < 4; i++){
+        if (digitalRead(buttons[i]) == HIGH){
+          pressedbutton = i;
+          digitalWrite(leds[i], HIGH);
+          tone(tons[i], HIGH);
+          delay(1000);
+          digitalWrite(leds[i], LOW);
+          tone(tons[i], LOW);
+        }
+      }
+    }
+    if (sequence[pass] != pressedbutton) {
+      for( int i = 0; i < 4; i++){
+        digitalWrite(leds[i], HIGH);
+        tone(tons[i], HIGH);
+        delay(1000);
+        digitalWrite(leds[i], LOW);
+        tone(tons[i], LOW);
+      }
+      game_over = true; 
+      break;
+    }
+    pass = pass + 1;
+  }
+  pass = 0;
+}
